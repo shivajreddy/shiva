@@ -1,0 +1,177 @@
+---
+title: "My Journey Through Handmade Hero"
+date: "2024-12-09"
+description: "Following Casey Muratori's Handmade Hero series from Day 1. Notes on C, Windows programming, memory, assembly, and why going deep matters."
+tags: ["c", "systems", "learning", "handmade-hero"]
+published: true
+---
+
+I kept debating whether I should start from day 1. I know a little bit of C - learned from the K&R book, did some LeetCode problems. I even skimmed through the first couple of Handmade Hero videos. My initial reaction was that it felt outdated. I like to get my hands dirty quickly: set up a git repo, start a readme, create main.c, let's go. But then I saw most of the early videos are on Windows and everything came to a halt.
+
+What I came to realize is that Casey Muratori has been working on this project since 2014. The educational effort that went into this is incredible. And for everyone (including me initially) who scoffs at the length of the content or the Windows platform - we're poor learners. We don't mean to go deep in the subject.
+
+This project is not for the average web dev. It's for hardcore programmers. Everything I thought of as a barrier was just me being a mediocre developer. And that's the developer I need to kill.
+
+So here we go. Starting with Day 1. No skipping anything.
+
+I'm going to take this opportunity to create summaries of every single video and make a short comprehensive guide on how to navigate this course. This course is much more than a university can ever offer in terms of value and quality. [This article](https://guide.handmadehero.org/) helped solidify that conclusion.
+
+---
+
+## Day 1 - Intro to C on Windows
+
+**My Day 01: January 24, 2025**
+
+- Basics of CPU, processors, cores
+- Set up Visual Studio as a Windows application project (not console project)
+
+Nothing fancy here. Just getting the environment ready. Already feeling the Windows-ness of it all.
+
+---
+
+## Day 2 - Debugging and Assembly Basics
+
+**My Day 02: January 25, 2025**
+
+- How to use Disassembly view in Visual Studio
+- How to debug properly
+- Windows expects `\r\n` for newlines. The Visual compiler converts `\n` to `\r\n` automatically, but when writing/modifying files and inserting `\n`, make sure to write in binary mode so the compiler doesn't do the conversion
+- Basics of assembly and registers
+
+Having gone through [this x86 Assembly with NASM playlist](https://www.youtube.com/playlist?list=PLetF-YjXm-sCH6FrTz4AQhfH6INDQvQSn) (at least the first 5 videos) helped a lot with understanding x86 and assembly.
+
+---
+
+## Day 3 - Understanding Memory
+
+**My Day 03: January 26, 2025**
+
+This is where things got interesting. Learning to interact with the Debug > Memory window:
+
+### Reading the Memory Window
+
+```
+0x0000007FE0EFF8E2  254  127  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+```
+
+- First column is the memory address
+- Each subsequent column represents a single byte
+- The address shown is for the first byte in that row
+- So `254` is at address `0x0000007FE0EFF8E2`, and `127` is at `0x0000007FE0EFF8E3`
+
+In the Watch window you can get the address of a variable just like in code. If there's `int x`, you can set the name to `&x` and it'll show the byte address.
+
+### Latency vs Bandwidth
+
+x GHz means x billion cycles per second. Example: 3 GHz = 3 x 10^9 cycles per second.
+
+Communicating with memory is slow. Here's the distinction:
+
+**Latency**: The delay or time it takes for a single operation to complete. In memory, it's the time to access data once a request is made. Measured in nanoseconds or clock cycles. If memory latency is 20ns, it takes 20ns to start retrieving the first piece of data.
+
+**Bandwidth**: The rate at which data can be transferred. Measured in GB/s. A memory module with 50 GB/s bandwidth can transfer 50 gigabytes per second.
+
+Think of it like a water pipe:
+- Latency = time for the first drop to come out after turning on the tap
+- Bandwidth = volume of water that flows per second
+
+### How Memory Copes with Latency Using High Bandwidth
+
+**Burst Transfers**: Memory doesn't fetch one piece at a time. It retrieves a block (like a 64-byte cache line). Once the initial latency is overcome, subsequent bytes stream in quickly.
+
+**Parallelism**: Modern memory (DDR, GDDR, HBM) operates in parallel, fetching multiple data chunks across wide buses.
+
+**Prefetching**: Processors predict which data will be needed and fetch it ahead of time.
+
+---
+
+## Days 4-5 - Deep Dive into Memory Representation
+
+**My Days 04-05: January 27-28, 2025**
+
+I have gaps in understanding assembly, so reading disassembly is confusing. But I pushed through.
+
+### Understanding Memory Addresses
+
+```
+0x00000088D491E884   44  15   1   0   0   0   0   0   0   0   0   0  ,..................
+```
+
+`0x00000088D491E884` - This is a virtual memory address. In hexadecimal. Decimal representation is ~587 billion. Memory is a long line of bytes, and this is the address of one byte in that array. It's virtual memory, not physical, which is why it can show such huge numbers.
+
+`44  15   1   0   0...` - These are the actual contiguous bytes starting from that address. `44` is at the address shown, `15` is at address+1, and so on.
+
+`,..................` - ASCII representation of those bytes.
+
+### Understanding Disassembly
+
+```
+00007FFA258635BB C7 45 94 2C 0F 01 00 mov dword ptr [rbp-6Ch],10F2Ch
+```
+
+- `00007FFA258635BB` - Memory address
+- `C7 45 94 2C 0F 01 00` - The actual bytes (what the processor sees)
+- `mov dword ptr [rbp-6Ch],10F2Ch` - Human-readable assembly
+
+The instruction width isn't constant in x86. That one is 7 bytes, but this next one is only 3:
+
+```
+00007FFA258635C7 48 63 C9 movsxd rcx,ecx
+```
+
+### How Larger Numbers Are Stored
+
+Each column in the memory window is a byte, holding values 0-255. But what about a number like 69420?
+
+In C, we'd use `int` (4 bytes). Binary representation of 69420:
+
+```
+1 0000 1111 0010 1100
+```
+
+Breaking it into bytes:
+- First byte: `0010 1100` = 44
+- Second byte: `0000 1111` = 15
+- Third byte: `0000 0001` = 1
+- Fourth byte: `0000 0000` = 0
+
+So in memory:
+
+```
+0x00000088D491E884   44  15   1   0
+```
+
+Notice it's in reverse order. This is **Little Endian** - places the low-order byte first. Used by x86, ARM, x64.
+
+**Big Endian** places high-order bytes first. Older architectures.
+
+### Uninitialized Variables
+
+In Debug mode, Visual Studio assigns `0xcc` to all bytes of uninitialized variables. This makes bugs easier to spot - if you see `0xcc` (decimal 240) in memory, you might be dealing with uninitialized data. Windows doesn't use `0` because `0` is a common intentional value.
+
+### Array Syntax
+
+`int x = arr[30]` is just shorthand for `int x = *(arr + 30)`. Pointer arithmetic.
+
+---
+
+## Day 5 - Continued
+
+**My Day 06: January 29, 2025**
+
+Still working through the fundamentals. More to come.
+
+---
+
+## Why I'm Doing This
+
+I could be doing web dev. I could be writing React. But there's something about understanding how things actually work at this level that feels important. Casey says the first 30 videos teach more than a university CS program. I'm inclined to believe him.
+
+The plan is to document every day, create summaries, and maybe help someone else who's on the same journey. If I can kill the mediocre developer in me, maybe I can build something real.
+
+---
+
+**Resources:**
+- [Handmade Hero](https://handmadehero.org/)
+- [Episode Guide](https://hero.handmade.network/episode)
+- [Course Guide](https://guide.handmadehero.org/)

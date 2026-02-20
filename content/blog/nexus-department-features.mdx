@@ -1,0 +1,313 @@
+---
+title: "Building with Data - Department-Specific Features in Nexus"
+date: "2025-01-02"
+description: "Part 2 of the Nexus deep dive. How EPC, FOSC, COR, and Dashboard systems solve real construction workflow problems with timeline tracking, permissions, and analytics."
+tags: ["nexus", "architecture", "python", "react"]
+published: true
+---
+
+## Introduction
+
+Architecture is necessary but not sufficient. A beautiful database schema and well-organized APIs mean nothing if they don't solve real problems for real people. In this second post, we shift focus from the *how* (which we explored in Part 1) to the *what*--the actual features that teams use every day.
+
+Nexus organizes work around **departments**, each with distinct responsibilities and workflows. The TecLab (Technical Laboratory) department is the heart of the system, containing the most complex and data-rich workflows. Field Operations, Engineering, Permitting--these aren't abstract concepts but represent dozens of people making daily decisions about hundreds of homes in various states of construction.
+
+## The TecLab Department: Heart of the Operation
+
+TecLab is responsible for the technical progression of homes from contract to completion. It manages four major workflow systems:
+
+### 1. EPC (Engineering & Permitting Center)
+
+The EPC system tracks the journey of a home through drafting, engineering review, plat preparation, and permitting. It's the longest and most critical workflow in the system.
+
+#### The Workflow Stages
+
+```
+Contract Signed
+    |
+Drafting (2-14 days typical)
+    |-- Drafter assigned
+    |-- Home plans created/modified
+    |-- Drafting completed
+    |
+Engineering Review (3-7 days typical)
+    |-- Sent to engineer
+    |-- Engineer reviews for code compliance
+    |-- Engineer returns with notes or approval
+    |
+Plat Preparation (5-10 days typical)
+    |-- Plat engineer assigned
+    |-- Lot survey and legal description created
+    |-- Plat finalized
+    |
+Permitting (10-30 days typical, varies by county)
+    |-- County determined
+    |-- Submitted to county
+    |-- County review period
+    |-- Permit received
+    |
+Lot Released (Ready for construction)
+```
+
+The EPC router (29KB of functionality) implements this workflow. Let's look at what it does:
+
+**Live Lots Endpoint**
+```python
+@router.get("/live")
+def get_live_lots():
+    # Returns all lots that are actively being worked on
+    # Excludes finished lots and already-released lots
+    # Provides drafter, engineer, and permit status
+```
+
+**Lot Details Endpoint**
+```python
+@router.get("/lot/{project_uid}")
+def get_lot(project_uid: str):
+    # Returns comprehensive data about a single lot
+    # Including all stage completion data
+    # Used when viewing or editing a specific lot
+```
+
+**Stage Update Endpoints**
+```python
+@router.post("/lot/{project_uid}/drafting/assign")
+def assign_drafting_lot(project_uid: str, user_data: User):
+    # When drafting head assigns a lot to a drafter
+    # Records who, when, and marks it as in-progress
+
+@router.post("/lot/{project_uid}/drafting/complete")
+def complete_drafting(project_uid: str, notes: str):
+    # When drafting is done
+    # Records completion time for cycle-time analytics
+
+@router.post("/lot/{project_uid}/permitting/submit")
+def submit_for_permit(project_uid: str, county: str):
+    # Marks the lot as submitted to a county
+    # Starts the permitting clock
+
+@router.post("/lot/{project_uid}/release")
+def release_lot(project_uid: str):
+    # Once permit is received
+    # Marks lot as released and ready for field operations
+    # Triggers downstream workflows
+```
+
+#### The Power of Timeline Data
+
+Notice that every stage records three pieces of information:
+1. **Who** did it (e.g., `engineering_engineer`)
+2. **When** they started (e.g., `engineering_sent`)
+3. **When** they finished (e.g., `engineering_received`)
+
+This allows the dashboard to compute:
+- **Cycle time**: How long did the engineering phase take? (engineering_received - engineering_sent)
+- **Bottleneck identification**: Which stages are taking longer than expected?
+- **Team workload**: How many lots is each drafter currently handling?
+- **SLA tracking**: Are we meeting our permitting timelines?
+
+### 2. FOSC (Field Operations Schedule Center)
+
+FOSC is where the rubber meets the road. While EPC deals with permits and paperwork, FOSC deals with physical homes--foundations, framing, finishes. It's the interface between the office and the construction crews.
+
+The FOSC workflow tracks the home construction schedule:
+
+```
+Lot Released from Permitting
+    |
+Home Siting Scheduled
+    |-- Surveyor assigned
+    |-- Date scheduled
+    |-- Site prepared
+    |
+Foundation/Framing (Multiple phases with specific dates)
+    |-- Start Date
+    |-- Expected End Date
+    |-- Actual Completion
+    |-- Defects/Issues
+    |
+Cabinet Installation
+    |-- Scheduled date
+    |-- Actual date
+    |-- Quality notes
+    |
+Home Closeout
+    |-- Punch list items
+    |-- Final inspections
+    |-- Ready for Buyer
+```
+
+The FOSC router (33KB) is particularly complex because it interfaces with:
+- **Field teams** reporting completion status
+- **Vendors** providing labor and materials
+- **Homebuyers** who may request changes or escalations
+- **Warranties** which begin at specific points in construction
+
+**Key FOSC Endpoints**
+```python
+@router.get("/all-lots")
+def get_all_fosc_lots():
+    # Returns all lots in field operations
+    # Filtered by user's department permission
+    # Includes start dates, completion dates, status
+
+@router.post("/lot/{project_uid}/homesiting")
+def record_homesiting(project_uid: str, data: HomeSitingData):
+    # Records when and where the home will be sited
+    # Triggers downstream scheduling
+
+@router.post("/lot/{project_uid}/foundation-start")
+def record_foundation_start(project_uid: str, data: FoundationData):
+    # Field supervisor reports foundation work starting
+    # Used for financial tracking and timeline management
+
+@router.post("/lot/{project_uid}/add-lot")
+def add_new_lot_to_fosc(project_uid: str, data: FOSCData):
+    # New lot added to field operations
+    # Only team heads can do this
+    # Validates that lot is released from EPC first
+```
+
+#### FOSC Permissions and Roles
+
+The recent commit history shows careful refinement of FOSC permissions:
+- **FOSC Viewer** (220): Can see lots but can't modify
+- **FOSC Editor** (221): Can update lot status
+- **FOSC Super User** (223): Can assign work, send emails, make critical decisions
+- **Team Head** (292): Can add new lots to the system
+
+### 3. COR (Certificate of Readiness)
+
+While EPC and FOSC handle the main workflows, COR handles an important gate-keeping function. Before construction can proceed in some areas, homes must pass various readiness certifications and inspections.
+
+```python
+@router.post("/lot/{project_uid}/cor/add-requirement")
+def add_cor_requirement(project_uid: str, requirement: COREData):
+    # Add a new certification requirement
+    # Examples: "Plumbing Inspection", "Electrical Rough-In"
+
+@router.post("/lot/{project_uid}/cor/mark-complete")
+def mark_cor_complete(project_uid: str, requirement_id: str):
+    # Record that a requirement has been completed
+    # Only admin or super user can do this
+```
+
+COR is lighter than EPC and FOSC but critical for houses where local codes require specific checkpoints.
+
+### 4. Dashboard & Analytics
+
+This is where all the timeline data comes together. The dashboard router (50KB!) computes real-time business metrics.
+
+#### Monthly Ticker Data
+
+```python
+@router.get("/ticker-data")
+def get_current_month_ticker_data():
+    # Returns:
+    # - Total lots in progress
+    # - Lots completed this month
+    # - Average cycle time for each stage
+    # - Lots by status (drafting, permitting, released)
+    # - Team utilization metrics
+```
+
+The implementation is sophisticated. It groups lots by contract date, filters for the current year and month, then computes cycle times:
+
+```python
+days_taken_to_draft = (
+    drafting_finished - drafting_assigned_on
+).days
+
+# Similar calculations for engineering, plat, permitting
+```
+
+#### Cycle Time Analysis
+
+The dashboard doesn't just report numbers--it provides insights. By comparing actual dates to planned dates, it identifies:
+- Which drafters are fastest?
+- Which counties have fastest permitting?
+- Which product types are quickest to build?
+- Are we improving month over month?
+
+## Advanced Features: Real-World Complexity
+
+### IHMS Integration
+
+One of the most interesting aspects of Nexus is how it bridges the old and new. Eagle Construction had an existing IHMS (Internal Home Management System) database containing vendor master data, construction schedules, and other historical information.
+
+Rather than migrating everything (an expensive, risky proposition), Nexus integrates with IHMS:
+
+```python
+async def connect_ihms_db():
+    # Opens a connection to the legacy MySQL database
+    # Allows queries to pull vendor information
+    # Construction start dates, etc.
+```
+
+The system can now:
+- Pull construction start dates from IHMS
+- Use IHMS vendor data for contractor assignments
+- Generate PMReviewDate based on construction start
+- Cross-reference IHMS superuserid for access control
+
+### Email Integration and Vendor Communication
+
+EPC and FOSC super users can trigger email notifications. The system:
+- Sends status updates to contractors
+- Alerts vendors when their work is assigned
+- Provides warranty notification chains
+- Generates reports for management review
+
+### CSV Export and Reporting
+
+A particularly useful feature is the ability to filter lots and export them as CSV:
+
+```python
+@router.get("/download")
+def download_lot_data(filters: dict):
+    # Filter lots based on criteria
+    # (by status, date range, product type, etc.)
+    # Generate CSV file
+    # Return for download
+```
+
+This bridges Nexus with Excel-loving teams who want to do their own analysis or use data in legacy reporting systems.
+
+## The Frontend: Turning Data Into Usable Interfaces
+
+With 181 TypeScript files and 18,500+ lines of code, the frontend includes:
+
+**Department-Specific Pages**
+```
+/src/pages/
+  ├── department/
+  │   └── teclab/
+  │       ├── EPC/
+  │       │   ├── AllLots.tsx
+  │       │   ├── LotEditor.tsx
+  │       │   ├── LotDetailsView.tsx
+  │       │   └── DraftingStatus.tsx
+  │       ├── FOSC/
+  │       │   ├── AllLots.tsx
+  │       │   ├── FieldOperationsView.tsx
+  │       │   └── HomeSitingScheduler.tsx
+  │       ├── Dashboard/
+  │       │   ├── Dashboard.tsx
+  │       │   ├── TickerMetrics.tsx
+  │       │   └── CycleTimeAnalysis.tsx
+  │       └── ...
+```
+
+**Role-Based UI**: The UI respects the permission system. A user with role 210 (EPC Viewer) sees read-only tables. A user with role 211 (EPC Editor) sees edit buttons. A user with role 213 (EPC Super User) sees additional email and admin buttons.
+
+## Conclusion: Architecture Serving Operational Needs
+
+What's remarkable about Nexus's department-specific implementations is their **business-logic alignment**. The EPC workflow exactly mirrors how homes actually move through the company. The FOSC system tracks real construction phases. The permissions match actual organizational structure.
+
+The system gracefully handles **uncertainty and change**. Adding a new field to a project document doesn't require a migration. Adding a new permission role doesn't require schema changes. This is the power of the architecture we discussed in Part 1 meeting the real-world demands of Part 2.
+
+In the final post, we'll explore the journey from conception to production. We'll discuss what was learned, how the system scales, and where it's headed next.
+
+---
+
+*This is the second post in a three-part exploration of Nexus. Part 3 will explore the journey from MVP to production, lessons learned, and the future roadmap.*

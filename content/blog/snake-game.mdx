@@ -1,0 +1,153 @@
+---
+title: "Snake Game in C++ with Raylib"
+date: "2024-12-23"
+description: "Building a classic Snake game in C++ with Raylib. Deque-based snake, O(1) collision checking, wraparound movement, and cross-platform builds."
+tags: ["cpp", "gamedev", "raylib", "projects"]
+published: true
+---
+
+Every programmer has to write Snake at some point. It's like a rite of passage, except instead of killing a lion you're just trying to make a rectangle eat smaller rectangles without running into itself. Very noble stuff.
+
+I decided to do mine in C++ with Raylib because I wanted to suffer in a language where the compiler actively dislikes me, and also because Raylib is genuinely pleasant to work with. It's one of those libraries that just gets out of your way and lets you draw things on screen without writing 500 lines of boilerplate first.
+
+## The Setup
+
+The project structure is pretty simple:
+
+```
+snake/
+├── src/
+│   ├── main.cpp
+│   ├── snake.cpp
+│   ├── grid.cpp
+│   └── globals.cpp
+├── lib/
+│   ├── windows/
+│   ├── macos/
+│   └── linux/
+└── Makefile
+```
+
+I bundled Raylib binaries for all three platforms because I wanted this to compile anywhere without the usual "wait let me install these 47 dependencies" dance. Just clone and `make`. That's the dream.
+
+## How the Snake Actually Works
+
+The snake is basically a deque (double-ended queue) of coordinates. Every time it moves, you add a new head position and remove the tail. When it eats food, you skip removing the tail and the snake grows. Elegant in theory, mildly annoying to debug in practice.
+
+```cpp
+void Snake::move() {
+    Coordinate new_head = {head.first, head.second};
+
+    switch (direction) {
+        case Direction::Up:    new_head.second--; break;
+        case Direction::Down:  new_head.second++; break;
+        case Direction::Left:  new_head.first--;  break;
+        case Direction::Right: new_head.first++;  break;
+    }
+
+    // Wraparound - because hitting walls is for quitters
+    new_head.first = (new_head.first + GRID_SIZE) % GRID_SIZE;
+    new_head.second = (new_head.second + GRID_SIZE) % GRID_SIZE;
+
+    // Check self-collision
+    if (body_set.count(new_head)) {
+        game_is_running = false;
+        return;
+    }
+
+    // ... rest of movement logic
+}
+```
+
+The `body_set` is an unordered_set that mirrors the deque - it gives O(1) collision checking instead of iterating through the whole body every frame. Because even in a simple snake game, I have opinions about time complexity.
+
+## Direction Changes
+
+You can't let the snake reverse into itself. That would be instant death and also make no physical sense (not that a snake eating floating pink squares makes much sense either, but we have standards).
+
+```cpp
+void Snake::change_direction(Direction new_dir) {
+    if (direction == Direction::Up && new_dir == Direction::Down) return;
+    if (direction == Direction::Down && new_dir == Direction::Up) return;
+    if (direction == Direction::Left && new_dir == Direction::Right) return;
+    if (direction == Direction::Right && new_dir == Direction::Left) return;
+
+    direction = new_dir;
+}
+```
+
+Simple and boring. The best kind of code.
+
+## Food Generation
+
+Food spawns randomly on the grid, but we need to make sure it doesn't appear inside the snake. Nothing ruins the gameplay experience quite like food spawning where you already are.
+
+```cpp
+void Grid::generate_food(Snake& snake) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis_row(3, GRID_SIZE - 3);
+    std::uniform_int_distribution<> dis_col(3, GRID_SIZE - 3);
+
+    do {
+        food_pos = {dis_row(gen), dis_col(gen)};
+    } while (snake.body_set.count(food_pos));
+}
+```
+
+I keep food away from the edges too because spawning food in the corner on frame one felt cheap.
+
+## The Game Loop
+
+The main loop runs at whatever FPS Raylib gives you, but the snake only moves every 250ms. This gives the game that classic grid-based feel instead of smooth movement.
+
+```cpp
+double move_timer = 0;
+double move_interval = 0.25;
+
+while (!WindowShouldClose()) {
+    move_timer += GetFrameTime();
+
+    if (move_timer >= move_interval) {
+        snake.move();
+        move_timer = 0;
+    }
+
+    // Handle input, render, etc.
+}
+```
+
+You could make the interval shorter as the score increases for difficulty scaling, but I haven't gotten around to that. The current version is already hard enough for me, which says more about my gaming skills than the difficulty curve.
+
+## Rendering
+
+Raylib makes drawing things stupid simple:
+
+```cpp
+void Snake::draw() {
+    int cell_width = SCREEN_WIDTH / GRID_SIZE;
+    int cell_height = SCREEN_HEIGHT / GRID_SIZE;
+
+    for (const auto& segment : body) {
+        DrawRectangle(
+            segment.first * cell_width,
+            segment.second * cell_height,
+            cell_width,
+            cell_height,
+            RED
+        );
+    }
+}
+```
+
+The grid gets gray outlines, the food is pink (I picked the color randomly and it stuck), and the snake is red. I'm not winning any design awards but it works.
+
+## What I Learned
+
+Mostly that C++ is still C++ and will find ways to confuse you even in a 300-line project. I spent an embarrassing amount of time debugging an issue that turned out to be me forgetting that `std::pair` comparison works lexicographically, which is not what you want when checking coordinates.
+
+Also that Raylib is great. If you want to make a simple game without dealing with SDL's verbosity or learning an entire engine, it's the way to go.
+
+## Try It
+
+Code's on [GitHub](https://github.com/shivajreddy/snake). Clone it, run `make`, and see how long you can survive before running into yourself. My high score is... actually let's not talk about my high score.

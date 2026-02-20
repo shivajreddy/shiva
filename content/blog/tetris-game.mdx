@@ -1,0 +1,256 @@
+---
+title: "Tetris in C++ with Raylib"
+date: "2024-12-30"
+description: "Building Tetris in C++ with Raylib. Rotation matrices, collision detection, sound effects, and the humbling realization that Tetris is harder than Snake."
+tags: ["cpp", "gamedev", "raylib", "projects"]
+published: true
+---
+
+After Snake, the natural progression is Tetris. It's the second boss in the "classic games you must implement" dungeon. Except this one actually requires you to think about rotation matrices and collision detection that isn't just "did you hit yourself." Very humbling.
+
+Again, C++ with Raylib. I could have done this in a language that doesn't make me question my life choices, but where's the fun in that? Plus I'm trying to get better at C++, and the only way to do that is to write more C++ until you stop making the same mistakes. (I'm still making the same mistakes.)
+
+## Project Structure
+
+Same setup as the snake game - Raylib bundled for all platforms:
+
+```
+tetris/
+├── src/
+│   ├── main.cpp
+│   ├── game.cpp
+│   ├── block.cpp
+│   ├── game.hpp
+│   ├── block.hpp
+│   └── colors.hpp
+├── assets/
+│   ├── move.wav
+│   └── rotate.wav
+├── lib/
+│   └── raylib/
+│       ├── windows/
+│       ├── macos/
+│       └── linux/
+└── Makefile
+```
+
+I added sound effects this time because hearing a satisfying "thunk" when you rotate a piece makes the whole experience 47% better. Scientific fact.
+
+## The Grid
+
+Tetris is played on a 10x20 grid. Each cell is either empty or filled with a color. Simple enough:
+
+```cpp
+constexpr int GAME_ROWS = 20;
+constexpr int GAME_COLS = 10;
+constexpr int CELL_SIZE = 30;
+
+std::array<std::array<Color, GAME_COLS>, GAME_ROWS> data;
+```
+
+The grid is just a 2D array of colors. When a block moves, we update the colors. When we render, we draw rectangles based on those colors. I went with a very exciting dark gray for empty cells.
+
+## The Blocks
+
+Every Tetris piece (tetromino, if you want to be fancy) is represented as a 3x3 boolean grid. True means there's a cell there, false means empty:
+
+```cpp
+class Block {
+public:
+    unsigned int id;
+    Color color;
+    std::array<std::array<bool, 3>, 3> block_data;
+    int origin_r;
+    int origin_c;
+    // ...
+};
+```
+
+The seven classic pieces:
+
+```cpp
+Block_L::Block_L() {
+    id = 1;
+    color = blue;
+    block_data = { { { 1, 0, 0 }, { 1, 1, 1 }, { 0, 0, 0 } } };
+};
+
+Block_T::Block_T() {
+    id = 6;
+    color = orange;
+    block_data = { { { 0, 0, 0 }, { 0, 1, 0 }, { 1, 1, 1 } } };
+};
+
+// ... and so on for J, I, O, S, Z
+```
+
+Each block knows its position on the grid via `origin_r` and `origin_c`. Movement means updating these coordinates and redrawing.
+
+## Movement and Collision
+
+Moving a block involves three steps:
+1. Clear the old position (set those cells back to dark gray)
+2. Check if the new position would cause a collision
+3. If no collision, draw at new position
+
+The collision detection checks boundaries and whether cells are already occupied:
+
+```cpp
+bool clash_detection(const Block& block, int origin_r, int origin_c) {
+    for (size_t r = 0; r < block.block_data.size(); r++) {
+        for (size_t c = 0; c < block.block_data[0].size(); c++) {
+            if (block.block_data[r][c]) {
+                int game_r = origin_r + r;
+                int game_c = origin_c + c;
+
+                // Check bounds
+                if (game_r < 0 || game_r >= GAME_ROWS ||
+                    game_c < 0 || game_c >= GAME_COLS) {
+                    return true;
+                }
+
+                // Check if cell is occupied
+                if (data[game_r][game_c] != dark_gray) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+```
+
+The move function returns different codes depending on what happened - 0 for success, 1 for hit bottom, 2 for hit wall, 3 for landed on another block. I used a goto statement to break out of nested loops and I regret nothing.
+
+## Rotation
+
+This is where things get spicy. Rotating a 3x3 grid 90 degrees clockwise:
+
+```cpp
+void Block::rotate_clock() {
+    // ... clear old position ...
+
+    std::array<std::array<bool, 3>, 3> temp = {};
+    for (int r = 0; r < 3; r++) {
+        for (int c = 0; c < 3; c++) {
+            temp[c][2 - r] = block_data[r][c];
+        }
+    }
+
+    // Check if rotation causes collision
+    std::array<std::array<bool, 3>, 3> old_data = block_data;
+    block_data = temp;
+
+    if (clash_detection(*this, origin_r, origin_c)) {
+        block_data = old_data;  // Revert if collision
+    } else {
+        PlaySound(sound_rotate);
+    }
+
+    insert_into_game(origin_r, origin_c);
+}
+```
+
+The formula `temp[c][2 - r] = block_data[r][c]` is the clockwise rotation. For counter-clockwise it's `temp[2 - c][r] = block_data[r][c]`. I had to draw this out on paper multiple times before it clicked. Matrix transformations are one of those things that are simple once you understand them and completely opaque before that.
+
+Also: if rotation would cause a collision (piece against wall or another block), we just cancel the rotation. Real Tetris has "wall kicks" where the piece tries different offsets to find a valid position, but I haven't implemented that yet.
+
+## Controls
+
+Arrow keys for movement, space to rotate clockwise, shift+space for counter-clockwise:
+
+```cpp
+void handle_keyboard(Block& block) {
+    int key = GetKeyPressed();
+    switch (key) {
+    case KEY_SPACE:
+        if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
+            block.rotate_anti_clock();
+        } else {
+            block.rotate_clock();
+        }
+        break;
+    case KEY_LEFT:  block.move(0, -1); break;
+    case KEY_RIGHT: block.move(0, 1);  break;
+    case KEY_DOWN:  block.move(1, 0);  break;
+    case KEY_UP:    block.move(-1, 0); break;  // for testing
+    }
+}
+```
+
+I left KEY_UP in there for debugging - it moves the block up which is definitely not how Tetris works but was helpful for testing rotation at different positions.
+
+## The Game Loop
+
+Blocks fall automatically every 500ms:
+
+```cpp
+double game_start_time = 0.0;
+const double interval = 0.5;
+
+while (!WindowShouldClose()) {
+    double currentTime = GetTime();
+
+    if (currentTime - game_start_time >= interval) {
+        game_start_time = currentTime;
+        block.move(1, 0);  // Move down
+    }
+
+    BeginDrawing();
+    ClearBackground(BLACK);
+    draw_cells();
+    handle_keyboard(block);
+    EndDrawing();
+}
+```
+
+## What's Missing
+
+This is still a work in progress. What works:
+- All 7 blocks with correct shapes and colors
+- Movement in all directions
+- Rotation with collision detection
+- Sound effects
+- Automatic falling
+
+What doesn't exist yet:
+- Line clearing (the whole point of Tetris, really)
+- Spawning new blocks when one lands
+- Game over detection
+- Score tracking
+- Next piece preview
+- Hard drop
+
+So it's more of a "Tetris block playground" than an actual game right now. You can spawn a random block, move it around, rotate it, and watch it fall. When it hits the bottom... nothing happens. It just sits there. Very zen.
+
+## The Colors
+
+I went with bright, saturated colors because that's what Tetris is about:
+
+```cpp
+const Color red = { 232, 18, 18, 255 };
+const Color blue = { 13, 64, 216, 255 };
+const Color green = { 47, 230, 23, 255 };
+const Color purple = { 166, 0, 247, 255 };
+const Color orange = { 226, 116, 17, 255 };
+const Color yellow = { 237, 234, 4, 255 };
+```
+
+I also had to add comparison operators for Raylib's Color struct because apparently that's not built in. Welcome to C++.
+
+```cpp
+inline bool operator==(const Color& c1, const Color& c2) {
+    return c1.r == c2.r && c1.g == c2.g &&
+           c1.b == c2.b && c1.a == c2.a;
+}
+```
+
+## What I Learned
+
+Tetris is harder than Snake. The rotation logic alone took me longer than the entire snake game. But it's satisfying when you finally see that T-piece spin correctly.
+
+I also learned that goto statements still work in C++ and sometimes they're actually the cleanest way to break out of nested loops. I'm sure someone will yell at me for this but the alternative was a bunch of boolean flags and that felt worse.
+
+Next step is implementing line clearing and actually making it a playable game. But for now, I'm happy that blocks fall and rotate correctly. Small victories.
+
+Code's at [GitHub](https://github.com/shivajreddy/tetris) if you want to see a half-finished Tetris clone.

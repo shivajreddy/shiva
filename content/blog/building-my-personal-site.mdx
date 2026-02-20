@@ -1,0 +1,260 @@
+---
+title: "Building My Personal Site with Go and Gin"
+date: "2024-12-16"
+description: "How I built a simple, frictionless personal site with Go, Gin, Goldmark for Markdown parsing, and SQLite. No heavy frameworks, no complex build steps."
+tags: ["go", "webdev", "projects"]
+published: true
+---
+
+I wanted a simple, frictionless personal site where I could just write Markdown posts and push to deploy. No heavy frameworks, no complex build steps. Here's how I built it with Go and the Gin web framework.
+
+## Project Structure
+
+```
+backend/shiva/
+├── main.go              # Entry point
+├── blog/
+│   └── blog.go          # Blog routes and Markdown parsing
+├── pages/
+│   └── pages.go         # Static pages (home, about, links)
+├── database/
+│   └── db.go            # SQLite connection
+├── templates/           # HTML templates
+├── static/              # CSS, images, PDFs
+└── posts/               # Markdown blog posts
+```
+
+## The Stack
+
+- **Go** - Fast, simple, compiles to a single binary
+- **Gin** - Lightweight web framework
+- **Goldmark** - Markdown parser with frontmatter support
+- **SQLite** - For future features (comments, analytics)
+
+## Setting Up the Server
+
+The main entry point is minimal. It just wires everything together:
+
+```go
+package main
+
+import (
+    "fmt"
+    "html/template"
+
+    "shiva/blog"
+    "shiva/database"
+    "shiva/pages"
+
+    "github.com/gin-gonic/gin"
+)
+
+func main() {
+    fmt.Println("Shiva blog")
+
+    router := gin.Default()
+    router.Static("/static", "./static")
+
+    tmpl := template.Must(template.ParseGlob("templates/*.html"))
+
+    db := database.ConnectDB()
+    defer db.Close()
+    database.InitDB(db)
+
+    pages.RegisterRoutes(router, tmpl)
+    blog.RegisterRoutes(router, tmpl)
+
+    router.Run("localhost:6969")
+}
+```
+
+## Static Pages
+
+Pages like home, about, and links are simple route handlers that render HTML templates:
+
+```go
+package pages
+
+import (
+    "html/template"
+    "github.com/gin-gonic/gin"
+)
+
+func RegisterRoutes(router *gin.Engine, tmpl *template.Template) {
+    router.GET("/", func(c *gin.Context) {
+        tmpl.ExecuteTemplate(c.Writer, "home.html", nil)
+    })
+
+    router.GET("/about", func(c *gin.Context) {
+        tmpl.ExecuteTemplate(c.Writer, "about.html", nil)
+    })
+
+    // Resume - display PDF in browser
+    router.GET("/resume", func(c *gin.Context) {
+        c.Header("Content-Type", "application/pdf")
+        c.Header("Content-Disposition", "inline; filename=resume.pdf")
+        c.File("./static/resume.pdf")
+    })
+
+    router.GET("/links", func(c *gin.Context) {
+        tmpl.ExecuteTemplate(c.Writer, "links.html", nil)
+    })
+}
+```
+
+## Blog with Markdown
+
+The blog reads Markdown files from the `posts/` directory. Each post has YAML frontmatter for metadata:
+
+```markdown
+---
+title: My Post Title
+date: 2025-11-24
+---
+
+Content here in **Markdown**.
+```
+
+The blog package parses these files using Goldmark:
+
+```go
+package blog
+
+import (
+    "bytes"
+    "html/template"
+    "os"
+    "path/filepath"
+    "sort"
+    "strings"
+
+    "github.com/gin-gonic/gin"
+    "github.com/yuin/goldmark"
+    meta "github.com/yuin/goldmark-meta"
+    "github.com/yuin/goldmark/parser"
+)
+
+type Post struct {
+    Slug    string
+    Title   string
+    Date    string
+    Content template.HTML
+}
+
+func RegisterRoutes(router *gin.Engine, tmpl *template.Template) {
+    md := goldmark.New(
+        goldmark.WithExtensions(meta.Meta),
+    )
+
+    loadPosts := func() ([]Post, error) {
+        var posts []Post
+        files, _ := filepath.Glob("posts/*.md")
+
+        for _, file := range files {
+            content, _ := os.ReadFile(file)
+
+            var buf bytes.Buffer
+            context := parser.NewContext()
+            md.Convert(content, &buf, parser.WithContext(context))
+
+            metaData := meta.Get(context)
+            title, _ := metaData["title"].(string)
+            date, _ := metaData["date"].(string)
+            slug := strings.TrimSuffix(filepath.Base(file), ".md")
+
+            posts = append(posts, Post{
+                Slug:    slug,
+                Title:   title,
+                Date:    date,
+                Content: template.HTML(buf.String()),
+            })
+        }
+
+        sort.Slice(posts, func(i, j int) bool {
+            return posts[i].Date > posts[j].Date
+        })
+
+        return posts, nil
+    }
+
+    router.GET("/blog", func(c *gin.Context) {
+        posts, _ := loadPosts()
+        tmpl.ExecuteTemplate(c.Writer, "index.html", posts)
+    })
+
+    router.GET("/post/:slug", func(c *gin.Context) {
+        slug := c.Param("slug")
+        // Load single post...
+        tmpl.ExecuteTemplate(c.Writer, "post.html", post)
+    })
+}
+```
+
+## HTML Templates
+
+Templates use Go's `html/template` syntax. Here's the blog listing page:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Shiva</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1><a href="/">Shiva</a></h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/blog">Blog</a>
+            <a href="/about">About</a>
+            <a href="/resume">Resume</a>
+            <a href="/links">Links</a>
+        </nav>
+    </header>
+    <main class="content-box">
+        <div class="posts">
+            {{if .}}
+            {{range .}}
+            <article class="post-preview">
+                <h2><a href="/post/{{.Slug}}">{{.Title}}</a></h2>
+                <time>{{.Date}}</time>
+            </article>
+            {{end}}
+            {{else}}
+            <p>No posts yet.</p>
+            {{end}}
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2025 Shiva. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+```
+
+## The Workflow
+
+1. Write a post in `posts/YYYY-MM-DD-slug.md`
+2. `git add . && git commit -m "New post" && git push`
+3. Done
+
+No build step. No npm. No webpack. Just write and push.
+
+## Running It
+
+```bash
+cd backend/shiva
+go run main.go
+```
+
+Visit `http://localhost:6969/`
+
+## What's Next
+
+- Deploy to a VPS with systemd
+- Add syntax highlighting for code blocks
+- Maybe comments with SQLite
+
+The whole thing is about 200 lines of Go. Simple, fast, and mine.

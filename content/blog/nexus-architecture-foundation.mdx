@@ -1,0 +1,259 @@
+---
+title: "Nexus - The Architectural Foundation of a Modern Home Construction Management System"
+date: "2025-01-01"
+description: "Part 1 of a deep dive into Nexus, a centralized platform for home construction management. Covering the tech stack, database design, API architecture, and role-based access control."
+tags: ["nexus", "architecture", "python", "react", "mongodb"]
+published: true
+---
+
+## Introduction
+
+Building a software system for a home construction company is no trivial task. It requires understanding the intricacies of multiple departments, the overlapping workflows of construction processes, the critical importance of real-time data synchronization, and the ability to scale while maintaining data integrity. **Nexus** is precisely such a system--a centralized platform designed for Eagle Construction of Virginia that orchestrates the complex workflows of home building with elegant simplicity.
+
+In this first post of a three-part series, we'll explore the architectural foundation of Nexus: its stack, design philosophy, database structure, and the core systems that hold it all together. By the end, you'll understand why Nexus is structured the way it is and how its architecture enables seamless collaboration across multiple departments.
+
+## The Vision: A Central Hub for Construction
+
+Before we dive into the code, let's understand the problem. Home construction involves numerous parallel workflows:
+- **Sales & Contracting**: Managing contracts, customer information, and permits
+- **Drafting**: Creating technical plans and designs
+- **Engineering**: Reviewing and approving designs
+- **Permitting**: Coordinating with county authorities for approvals
+- **Field Operations**: Managing construction timelines and home siting
+- **Warranty**: Tracking post-sale items and vendor issues
+
+Each of these areas traditionally operated in silos--different spreadsheets, different systems, different sources of truth. Nexus solves this by providing a **single central database** where all departments can read, write, and collaborate on the same project data.
+
+## The Technology Stack
+
+Nexus is built on a modern, proven technology foundation:
+
+### Frontend
+- **React** with TypeScript for type-safe component development
+- **Redux** for state management, allowing multiple UI components to subscribe to project data changes
+- **Vite** as the build tool, providing lightning-fast development and production builds
+- **Tailwind CSS** for consistent, utility-first styling across the application
+- **Shadcn/ui** component library for professional, accessible UI components out of the box
+
+The frontend consists of **181 TypeScript/TSX files** with approximately **18,500 lines** of code (including styles), organized into clear feature areas: authentication, department-specific pages, projects, and common components.
+
+### Backend
+- **FastAPI** (Python) for the REST API, chosen for its speed, automatic API documentation, and developer experience
+- **MongoDB** as the primary database for flexible document storage and real-time data structure evolution
+- **MySQL/IHMS Database** for legacy system integration with the existing IHMS (internal home management system)
+- **Socket.IO** for real-time WebSocket communication
+- **Email integration** via SMTP for automated notifications
+- **Docker & Docker Compose** for containerized deployment
+
+The backend contains **38 Python files** with approximately **7,272 lines** of code, modularized by routers and organized by department and functionality.
+
+## Database Architecture: The Heart of Nexus
+
+The database design is where Nexus truly shines. Rather than trying to force a relational schema onto construction workflows, Nexus embraces MongoDB's document model with a beautifully hierarchical structure:
+
+### The Project Document Structure
+
+At the core sits the **Project** document--a single, comprehensive document that represents everything about a home from contract to completion:
+
+```
+Project
+├── project_info (basic identifiers)
+│   ├── project_uid (unique identifier)
+│   ├── project_id (human-readable ID)
+│   ├── community
+│   ├── section
+│   └── lot_number
+├── meta_info (administrative data)
+│   ├── created_at (when the record was created)
+│   └── created_by (which user created it)
+├── contract_info (sales-wide data)
+│   ├── contract_type (SPEC, Permit & Hold, Contract)
+│   ├── contract_date
+│   └── ... other sales fields
+├── teclab_data (TecLab department specifics)
+│   ├── epc_data (Engineering & Permitting Center)
+│   ├── cor_data (Certificate of Readiness)
+│   ├── fosc_data (Field Operations Schedule Center)
+│   └── ... other teclab workflows
+└── sales_data (Sales department specifics)
+    └── ... sales-specific fields
+```
+
+This structure is elegant because:
+
+1. **Single Source of Truth**: All data about a project lives in one document. No need to join across multiple tables or worry about consistency.
+
+2. **Denormalization by Design**: Fields are intentionally duplicated across levels (e.g., `community`, `section`, `lot_number` appear in both `project_info` and used within department data). This allows queries to filter on these fields without nested lookups, a critical performance optimization in MongoDB.
+
+3. **Department Isolation with Shared Context**: Each department has its own namespace (`teclab_data.epc_data`, `teclab_data.fosc_data`, etc.) but can access shared context from the project level. This prevents accidental data contamination while enabling cross-department visibility.
+
+4. **Evolutionary Growth**: As new fields are needed, they can be added to the appropriate namespace without schema migrations. MongoDB's flexibility means old and new documents can coexist gracefully.
+
+### Schemas That Tell Stories
+
+Looking at the schema files reveals the attention to detail in the system design. For example, the `EPCData` schema (Engineering & Permitting Center) contains:
+
+```python
+# Status tracking
+lot_status_finished: bool
+lot_status_released: bool
+
+# Contract details
+contract_date: Optional[datetime]
+contract_type: Optional[str]
+product_name: Optional[str]
+elevation_name: Optional[str]
+
+# Stage 1: Drafting
+drafting_drafter: Optional[str]
+drafting_assigned_on: Optional[datetime]
+drafting_finished: Optional[datetime]
+drafting_notes: Optional[str]
+
+# Stage 2: Engineering
+engineering_engineer: Optional[str]
+engineering_sent: Optional[datetime]
+engineering_received: Optional[datetime]
+engineering_notes: Optional[str]
+
+# Stage 3: Plat
+plat_engineer: Optional[str]
+plat_sent: Optional[datetime]
+plat_received: Optional[datetime]
+plat_notes: Optional[str]
+
+# Stage 4: Permitting
+permitting_county_name: Optional[str]
+permitting_submitted: Optional[datetime]
+permitting_received: Optional[datetime]
+permitting_notes: Optional[str]
+```
+
+Notice the pattern: for each workflow stage, we track not just the outcome but also **who did it**, **when they started**, and **when they finished**. This enables the analytics and dashboard systems we'll discuss later.
+
+### Integration with Legacy Systems
+
+Interestingly, Nexus doesn't try to replace everything. It integrates with the existing IHMS database via MySQL, pulling in vendor master data, house construction details, and other administrative information. The `IHMSTableVendorMaster` schema maps legacy database fields to Pydantic models, allowing seamless bridging between old and new systems.
+
+This pragmatic approach is a sign of mature system design--respecting existing investments while building something better on top.
+
+## API Router Architecture
+
+The FastAPI backend organizes its endpoints into logical routers, each handling a specific domain:
+
+```
+/auth            - Authentication and login
+/public          - Public-facing pages and data
+/eagle           - Company-wide data and configurations
+/department      - Department-specific APIs
+  /teclab        - The main TecLab operations hub
+    /epc         - Engineering & Permitting Center (29KB router)
+    /fosc        - Field Operations Schedule Center (33KB router)
+    /dashboard   - Analytics and reporting (50KB router)
+    /cor         - Certificate of Readiness
+/admin           - Administrative operations
+/projects        - Project search and management
+/dev             - Development utilities
+```
+
+The size of some routers tells a story. The `dashboard.py` file at 50KB handles substantial functionality--computing monthly statistics, tracking cycle times, and aggregating data across multiple projects. The `epc.py` and `fosc.py` routers at 29KB and 33KB respectively manage the detailed workflows of their respective departments.
+
+## Role-Based Access Control: Fine-Grained Permissions
+
+Nexus implements a hierarchical role system that evolved over the course of development:
+
+```
+1xx Series - Public Roles
+  101 - Public pages access
+
+2xx Series - TECLab Department
+  21x - EPC Related
+    210 - EPC viewer (read-only)
+    211 - EPC lot editor (can edit lots)
+    213 - EPC super user (access to emails, change form data)
+  22x - Field Operations Related
+    220 - FOSC viewer (read-only)
+    221 - FOSC editor (can edit lots)
+    223 - FOSC super user (access to emails, change form data)
+  29x - Team Leadership
+    291 - Drafting Head
+    292 - Home Siting & FOSC Head
+    299 - Department Head (TECLab)
+
+600 Series - Dashboard Access
+  600 - View Dashboard (analytics and reports)
+
+999 - Admin (full access to everything)
+```
+
+This structure is pragmatic:
+- **Base permissions** (e.g., 210 for EPC viewer) provide read-only access to filtered data
+- **Edit permissions** (e.g., 211) enable field updates with audit trails
+- **Super user permissions** (e.g., 213) unlock admin features like email notifications
+- **Leadership roles** (29x) control permissions for creating new lots and managing teams
+- **Admin role** (999) serves as the master key for system administration
+
+The role system evolved through the git history--early versions had simpler permissions, but as the system matured and more team members were added, the need for granular control became apparent.
+
+## Deployment Architecture
+
+Nexus is designed for production deployment with Docker containers:
+
+### Docker Compose Orchestration
+The frontend (React/Vite on port 3000) and backend (FastAPI on port 8000) run as separate containerized services. This provides:
+- **Isolation**: Each service can be restarted, scaled, or updated independently
+- **Consistency**: The exact same container runs in development and production
+- **Configuration via Environment Variables**: Different .env files for dev, test, and production allow the same image to adapt to different environments
+
+### Multi-Environment Support
+```
+Backend environments:
+  .env.dev   - Development (localhost, logging enabled)
+  .env.test  - Testing (isolated test database)
+  .env.prod  - Production (hardened, no debug logging)
+
+Frontend environments:
+  .env       - Development (connects to local backend)
+  .env.prod  - Production (connects to deployed backend via domain)
+```
+
+### Production Deployment
+The system is deployed on Google Cloud Platform VMs with:
+- Proper firewall rules configured via network tags
+- CORS middleware configured for multiple origins (localhost for development, production domains)
+- Separate databases for dev and prod environments to prevent accidental data cross-contamination
+- Docker volumes for persistent data storage
+
+## Core Services and Utilities
+
+Beyond the routers, Nexus includes several important utility systems:
+
+### Security & Authentication
+The OAuth2 module provides JWT-based authentication, allowing the frontend to obtain tokens and maintain sessions. The `get_current_user_data` dependency is used throughout the backend to ensure only authenticated users can access protected endpoints.
+
+### Email Integration
+A dedicated email module handles automated notifications--sending lot status updates, vendor communications, and warranty alerts. This integration is particularly important for the FOSC and warranty tracking systems.
+
+### Database Connection Management
+The database initialization is carefully orchestrated:
+1. MongoDB connection for the primary document store
+2. MySQL connection to the IHMS database for legacy data
+3. Setup endpoints that initialize collections with proper indexes and initial data
+
+### Real-time Updates via Socket.IO
+WebSocket integration via Socket.IO enables real-time notifications. When one user updates a lot status, other users viewing the same project can be notified instantly. This is especially valuable in field operations where timing is critical.
+
+## Conclusion: Architecture in Service of Users
+
+What strikes most about Nexus's architecture is its **pragmatism**. It doesn't try to solve every possible future requirement. It doesn't over-engineer with unnecessary abstractions. Instead, it provides:
+
+- **A clear data model** that mirrors business processes
+- **Flexible APIs** that multiple departments can use in their own ways
+- **Proper authentication and authorization** without excessive complexity
+- **Real production experience** visible in the deployment configuration
+
+In the next post, we'll dive deep into **the specific departments**--how EPC, FOSC, COR, and other systems use this architecture to solve real construction problems.
+
+---
+
+*This is the first post in a three-part exploration of Nexus. Part 2 will cover the department-specific implementations and features. Part 3 will explore the journey from MVP to production, lessons learned, and the future roadmap.*
