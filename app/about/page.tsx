@@ -104,45 +104,25 @@ export default function AboutPage() {
           </h2>
           <div className="rounded-lg border border-border bg-card p-4 text-sm space-y-2">
             <div>
-              <span className="text-muted">email:</span>{" "}
-              <a
-                href="mailto:hello@shiva.dev"
-                className="text-accent hover:underline"
-              >
-                hello@shiva.dev
-              </a>
-            </div>
-            <div>
               <span className="text-muted">github:</span>{" "}
               <a
-                href="https://github.com/shiva"
+                href="https://github.com/shivajreddy"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-accent hover:underline"
               >
-                github.com/shiva
+                github.com/shivajreddy
               </a>
             </div>
             <div>
               <span className="text-muted">linkedin:</span>{" "}
               <a
-                href="https://linkedin.com/in/shiva"
+                href="https://www.linkedin.com/in/kshivareddy"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-accent hover:underline"
               >
-                linkedin.com/in/shiva
-              </a>
-            </div>
-            <div>
-              <span className="text-muted">x.com:</span>{" "}
-              <a
-                href="https://x.com/shiva"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-accent hover:underline"
-              >
-                x.com/shiva
+                linkedin.com/in/kshivareddy
               </a>
             </div>
           </div>

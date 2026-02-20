@@ -75,7 +75,7 @@ export default function Home() {
         </h2>
         <div className="flex flex-wrap gap-3 text-sm">
           <a
-            href="https://github.com/shiva"
+            href="https://github.com/shivajreddy"
             target="_blank"
             rel="noopener noreferrer"
             className="px-3 py-1.5 rounded border border-border text-muted hover:text-accent hover:border-accent/30 transition-colors"
@@ -83,26 +83,12 @@ export default function Home() {
             github
           </a>
           <a
-            href="https://linkedin.com/in/shiva"
+            href="https://www.linkedin.com/in/kshivareddy"
             target="_blank"
             rel="noopener noreferrer"
             className="px-3 py-1.5 rounded border border-border text-muted hover:text-accent hover:border-accent/30 transition-colors"
           >
             linkedin
-          </a>
-          <a
-            href="https://x.com/shiva"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-3 py-1.5 rounded border border-border text-muted hover:text-accent hover:border-accent/30 transition-colors"
-          >
-            x.com
-          </a>
-          <a
-            href="mailto:hello@shiva.dev"
-            className="px-3 py-1.5 rounded border border-border text-muted hover:text-accent hover:border-accent/30 transition-colors"
-          >
-            email
           </a>
         </div>
       </section>

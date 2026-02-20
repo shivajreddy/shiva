@@ -1,10 +1,8 @@
 import Link from "next/link";
 
 const socialLinks = [
-  { href: "https://github.com/shiva", label: "github" },
-  { href: "https://linkedin.com/in/shiva", label: "linkedin" },
-  { href: "https://x.com/shiva", label: "x.com" },
-  { href: "mailto:hello@shiva.dev", label: "email" },
+  { href: "https://github.com/shivajreddy", label: "github" },
+  { href: "https://www.linkedin.com/in/kshivareddy", label: "linkedin" },
 ];
 
 export function Footer() {
