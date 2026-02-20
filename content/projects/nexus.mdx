@@ -1,0 +1,29 @@
+---
+title: "Nexus"
+description: "A centralized construction management platform for Eagle Construction of Virginia. Orchestrates complex workflows across drafting, engineering, permitting, and field operations."
+tech: ["React", "TypeScript", "Python", "FastAPI", "MongoDB", "MySQL", "Docker", "Socket.IO", "Tailwind CSS"]
+github: "https://github.com/shivajreddy/nexus"
+live: "https://nexus.archi-tec-tonic.com/"
+featured: true
+---
+
+## Overview
+
+Nexus is a centralized platform designed for Eagle Construction of Virginia that orchestrates the complex workflows of home building. It replaces fragmented spreadsheets with a single source of truth for all project data, updated in real-time with proper access controls.
+
+## Key Features
+
+- **EPC (Engineering & Permitting Center)** -- tracks homes through drafting, engineering review, plat preparation, and county permitting
+- **FOSC (Field Operations Schedule Center)** -- manages physical construction from foundation to closeout
+- **Dashboard & Analytics** -- real-time cycle-time analysis, bottleneck detection, and team workload metrics
+- **Role-Based Access Control** -- fine-grained permissions with viewer, editor, super user, and team head roles
+- **IHMS Integration** -- bridges with the legacy Internal Home Management System via MySQL for vendor and schedule data
+- **Real-time Updates** -- Socket.IO WebSocket integration for instant status notifications across users
+- **Email Notifications** -- automated vendor communications and status alerts
+- **CSV Export** -- filtered lot data export for reporting and legacy system integration
+
+## Architecture
+
+The system uses a MongoDB document model where each Project is a single comprehensive document containing all department data. The FastAPI backend organizes endpoints into department-specific routers (EPC at 29KB, FOSC at 33KB, Dashboard at 50KB). The React frontend with 181 TypeScript files provides role-aware UI across all departments.
+
+Deployed on Google Cloud Platform with Docker Compose, supporting dev/test/prod environments.

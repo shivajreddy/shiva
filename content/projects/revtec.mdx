@@ -1,0 +1,22 @@
+---
+title: "REVTEC"
+description: "A Revit API plugin for automating architectural workflows. Built with C# targeting Autodesk Revit, with a modular command architecture and custom WPF UI."
+tech: ["C#", ".NET", "Revit API", "WPF", "XAML"]
+github: "https://github.com/shivajreddy/revtec"
+featured: true
+---
+
+## Overview
+
+REVTEC is a Revit add-in plugin that automates architectural and engineering workflows within Autodesk Revit. Built with C# and the Revit API, it provides custom commands accessible directly from the Revit ribbon interface.
+
+## Architecture
+
+- **Commands/** -- individual Revit external commands implementing `IExternalCommand`
+- **UI/** -- WPF-based user interface components with XAML layouts
+- **Utils/** -- shared utilities for Revit document interaction
+- **Resources/** -- embedded icons and assets for the ribbon panel
+
+## Installation
+
+The plugin is distributed as compiled `.dll` and `.addin` files that get placed into Revit's AddIns directory (`%APPDATA%\Autodesk\Revit\Addins\2022`). Revit loads the plugin on startup with the "Always Load" option.

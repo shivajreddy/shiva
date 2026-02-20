@@ -1,0 +1,36 @@
+---
+title: "EK24 - Kitchen Automation Platform"
+description: "A production Revit add-in for custom kitchen design, pricing, and estimation at Eagle Construction. Automates cabinet layout, brand switching, cost estimation, and PDF/Excel export."
+tech: ["C#", ".NET", "Revit API", "WPF", "XAML", "MVVM"]
+github: "https://github.com/shivajreddy/ek24"
+featured: true
+---
+
+## Overview
+
+EK24 is a comprehensive kitchen automation platform built as a Revit add-in for Eagle Construction of Virginia. It handles the full lifecycle of kitchen projects -- from custom design and cabinet configuration to pricing estimation and final proposal generation.
+
+## Features
+
+- **Custom Kitchen Design** -- design kitchens tailored to client specifications, integrating with design libraries and templates directly in Revit
+- **Brand Switching** -- swap entire cabinet brands and configurations with a single command while maintaining layout integrity
+- **Price Estimation** -- calculates costs based on materials, labor, and other factors for accurate budgeting
+- **Export to Excel** -- automated quantity takeoff and cost breakdown export
+- **Print to PDF** -- generate client-ready kitchen proposal documents
+- **Request Handling** -- manages client requests and integrates them into the project workflow
+- **View Filters** -- automated Revit view filter updates for kitchen-specific visualization
+
+## Architecture
+
+Built following the MVVM pattern with clean separation of concerns:
+
+- **Commands/** -- Revit external commands for brand changes, creation, export, and print operations
+- **UI/** -- full MVVM stack with Views (XAML), ViewModels, Models, Services, and Converters
+- **Dtos/** -- data transfer objects for Revit family instance data
+- **RequestHandling/** -- client request management utilities
+- **Utils/** -- shared helpers for Revit document interaction
+- **Resources/** -- embedded icons, images, and ribbon panel assets
+
+## Impact
+
+Production tool delivering cost savings and significant efficiency improvements for Eagle Construction's kitchen design workflow. Replaced manual cabinet specification and pricing processes with automated, consistent, and auditable workflows.
