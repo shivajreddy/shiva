@@ -127,6 +127,33 @@ export default function AboutPage() {
             </div>
           </div>
         </section>
+
+        {/* Resume */}
+        <section>
+          <h2 className="text-lg font-semibold mb-4">
+            <span className="text-accent mr-2">&gt;</span>
+            resume.pdf
+          </h2>
+          <div className="rounded-lg border border-border bg-card overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <span className="text-sm text-muted">resume.pdf</span>
+              <a
+                href="/resume.pdf"
+                download="Resume-ShivaReddy-SoftwareEngineer.pdf"
+                className="text-sm text-accent hover:underline transition-colors"
+              >
+                download
+              </a>
+            </div>
+            <div className="w-full" style={{ height: "80vh" }}>
+              <iframe
+                src="/resume.pdf"
+                className="w-full h-full border-0"
+                title="Resume"
+              />
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

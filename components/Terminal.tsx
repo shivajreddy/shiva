@@ -3,15 +3,15 @@
 import { useEffect, useState } from "react";
 
 const ASCII_ART = [
-  "         ██████╗ ███╗   ███╗██████╗ ██╗     ",
-  "        ██╔════╝ ████╗ ████║██╔══██╗██║     ",
-  "        ╚█████╗  ██╔████╔██║██████╔╝██║     ",
-  "         ╚═══██╗ ██║╚██╔╝██║██╔═══╝ ██║     ",
-  "        ██████╔╝ ██║ ╚═╝ ██║██║     ███████╗",
-  "        ╚═════╝  ╚═╝     ╚═╝╚═╝     ╚══════╝",
+  " ███████╗██╗  ██╗██╗██╗   ██╗ █████╗ ",
+  " ██╔════╝██║  ██║██║██║   ██║██╔══██╗",
+  " ███████╗███████║██║██║   ██║███████║",
+  " ╚════██║██╔══██║██║╚██╗ ██╔╝██╔══██║",
+  " ███████║██║  ██║██║ ╚████╔╝ ██║  ██║",
+  " ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝  ╚═╝  ╚═╝",
 ];
 
-const INFO_LINES: { label: string; value: string }[] = [
+const INFO_LINES: { label: string; value: string; href?: string }[] = [
   { label: "", value: "shiva@shiva.computer" },
   { label: "", value: "-------------------------" },
   { label: "Aliases", value: "smpl, shiv, shv" },
@@ -19,6 +19,7 @@ const INFO_LINES: { label: string; value: string }[] = [
   { label: "Shell", value: "fish" },
   { label: "Editor", value: "Emacs / Neovim" },
   { label: "Languages", value: "C, C++, Go, Python, Elixir, JS/TS" },
+  { label: "Config", value: "dotfiles", href: "https://github.com/shivajreddy/dotfiles" },
   { label: "Location", value: "San Francisco, CA" },
   { label: "Hobbies", value: "Gym, Films, Chess, Poker, Games, Reading" },
 ];
@@ -98,7 +99,18 @@ export function Terminal() {
                   <>
                     <span className="text-accent font-bold">{info.label}</span>
                     <span className="text-muted">: </span>
-                    <span className="text-foreground">{info.value}</span>
+                    {info.href ? (
+                      <a
+                        href={info.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-foreground underline decoration-muted hover:text-accent hover:decoration-accent transition-colors"
+                      >
+                        {info.value}
+                      </a>
+                    ) : (
+                      <span className="text-foreground">{info.value}</span>
+                    )}
                   </>
                 )}
               </div>
