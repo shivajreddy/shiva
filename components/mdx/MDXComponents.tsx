@@ -37,7 +37,6 @@ export const mdxComponents: MDXComponents = {
           {...props}
         >
           {children}
-          <span className="text-xs ml-0.5">&nearr;</span>
         </a>
       );
     }

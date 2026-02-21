@@ -1,0 +1,48 @@
+---
+title: "Hush"
+description: "Local speech-to-text with hotkey control. Press a hotkey, speak, and the transcription is automatically copied to clipboard and pasted. Powered by OpenAI Whisper."
+tech: ["Python", "OpenAI Whisper", "PyInstaller", "pynput", "sounddevice"]
+github: "https://github.com/shivajreddy/hush"
+featured: true
+---
+
+## Overview
+
+Hush is a local speech-to-text tool that runs entirely on your machine. Press a hotkey to start recording, speak, and when you stop the transcription is automatically copied to your clipboard and pasted. No cloud APIs, no subscriptions -- just OpenAI's Whisper model running locally.
+
+## Features
+
+- **Hotkey-driven** -- `Shift+F10` by default, fully customizable via `keymaps.txt`
+- **Auto-paste** -- transcription is copied to clipboard and pasted automatically after recording stops
+- **Multiple models** -- choose from tiny (75MB, fastest) to large (3GB, best accuracy)
+- **Multi-language** -- supports transcription and translation (e.g., Russian to English)
+- **Standalone binary** -- builds to a single `hush.exe` via PyInstaller
+- **Fully local** -- no internet required after model download
+
+## Usage
+
+```bash
+hush.exe          # Default model (base)
+hush.exe tiny     # Fastest, lower accuracy
+hush.exe small    # Good accuracy, recommended for non-English
+hush.exe medium   # Great accuracy, slower
+hush.exe large    # Best accuracy, slowest
+```
+
+## How It Works
+
+1. Hush loads the selected Whisper model on startup
+2. Press the hotkey to start recording audio via sounddevice
+3. Press the hotkey again to stop
+4. Audio is transcribed locally through Whisper
+5. Result is copied to clipboard via pyperclip and pasted via pynput
+
+## Models
+
+| Model | Size | Speed | Accuracy |
+|-------|------|-------|----------|
+| tiny | 75MB | Fastest | Basic |
+| base | 150MB | Fast | OK |
+| small | 500MB | Medium | Good |
+| medium | 1.5GB | Slow | Great |
+| large | 3GB | Slowest | Best |
