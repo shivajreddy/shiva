@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default function Home() {
   const recentPosts = getAllPosts().slice(0, 3);
-  const featuredProjects = getFeaturedProjects().slice(0, 3);
+  const featuredProjects = getFeaturedProjects();
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
