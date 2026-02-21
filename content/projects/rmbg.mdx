@@ -1,0 +1,41 @@
+---
+title: "RMBG"
+description: "Remove image backgrounds with a simple web UI or CLI. Powered by U2-Net, deployed on Google Cloud Run with a Docker container."
+tech: ["Python", "Flask", "U2-Net", "ONNX", "Docker", "Google Cloud Run"]
+github: "https://github.com/shivajreddy/rmbg"
+live: "https://rmbg-proxy.shivajayaramireddy.workers.dev/"
+featured: true
+---
+
+## Overview
+
+RMBG is a background removal tool that lets you upload an image via a drag-and-drop web UI and download the result as a transparent PNG. It uses the [rembg](https://github.com/danielgatis/rembg) library powered by U2-Net for high-quality background removal.
+
+## Features
+
+- **Web UI** -- drag-and-drop image upload with instant background removal and automatic download
+- **CLI** -- process single images from the command line
+- **Dockerized** -- single `docker build && docker run` to get it running anywhere
+- **Cloud Run deployment** -- live on Google Cloud Run for serverless, on-demand processing
+
+## How It Works
+
+1. Upload an image through the browser (or pass it via CLI)
+2. The Flask server passes it through the U2-Net ONNX model via rembg
+3. Background is removed and the result is returned as a transparent PNG
+
+## Project Structure
+
+```
+rmbg/
+├── src/
+│   ├── app.py            # Flask web server
+│   ├── cli.py            # CLI for single image processing
+│   ├── models/
+│   │   └── u2net.onnx    # U2-Net model weights
+│   └── templates/
+│       └── index.html    # Web UI
+├── requirements.txt
+├── Dockerfile
+└── README.md
+```
