@@ -25,9 +25,10 @@ export function Header() {
     <header className="border-b border-border">
       <nav className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-1 text-sm">
-          <span className="text-accent">visitor</span>
-          <span className="text-muted">@</span>
-          <span className="text-foreground">shiva</span>
+          <Link href="/" className="hover:opacity-80 transition-opacity">
+            <span className="text-muted">visitor@</span>
+            <span className="text-accent">shiva</span>
+          </Link>
           <span className="text-muted">:</span>
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-1 ml-1">

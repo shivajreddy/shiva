@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TechIcon } from "@/components/TechIcon";
 
 export const metadata: Metadata = {
   title: "About",
@@ -38,16 +39,17 @@ export default function AboutPage() {
             <span className="text-accent mr-2">&gt;</span>
             tech.stack
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="text-sm text-accent mb-2">languages</div>
               <div className="flex flex-wrap gap-1.5">
-                {["TypeScript", "JavaScript", "Python", "Go", "Rust"].map(
+                {["C", "C++", "Go", "Python", "Elixir", "TypeScript", "JavaScript"].map(
                   (lang) => (
                     <span
                       key={lang}
-                      className="text-xs px-2 py-0.5 rounded border border-border text-muted"
+                      className="text-xs px-2 py-0.5 rounded border border-border text-muted inline-flex items-center gap-1"
                     >
+                      <TechIcon name={lang} />
                       {lang}
                     </span>
                   )
@@ -57,11 +59,12 @@ export default function AboutPage() {
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="text-sm text-accent mb-2">frameworks</div>
               <div className="flex flex-wrap gap-1.5">
-                {["React", "Next.js", "Node.js", "Tailwind CSS"].map((fw) => (
+                {["React", "Next.js", "Node.js", "Tailwind CSS", "Flask", "FastAPI"].map((fw) => (
                   <span
                     key={fw}
-                    className="text-xs px-2 py-0.5 rounded border border-border text-muted"
+                    className="text-xs px-2 py-0.5 rounded border border-border text-muted inline-flex items-center gap-1"
                   >
+                    <TechIcon name={fw} />
                     {fw}
                   </span>
                 ))}
@@ -70,11 +73,12 @@ export default function AboutPage() {
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="text-sm text-accent mb-2">tools</div>
               <div className="flex flex-wrap gap-1.5">
-                {["Git", "Docker", "Linux", "VS Code", "Vim"].map((tool) => (
+                {["Git", "Docker", "Linux", "Neovim", "Emacs"].map((tool) => (
                   <span
                     key={tool}
-                    className="text-xs px-2 py-0.5 rounded border border-border text-muted"
+                    className="text-xs px-2 py-0.5 rounded border border-border text-muted inline-flex items-center gap-1"
                   >
+                    <TechIcon name={tool} />
                     {tool}
                   </span>
                 ))}
@@ -83,11 +87,12 @@ export default function AboutPage() {
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="text-sm text-accent mb-2">databases</div>
               <div className="flex flex-wrap gap-1.5">
-                {["PostgreSQL", "Redis", "MongoDB"].map((db) => (
+                {["PostgreSQL", "MongoDB", "MySQL", "Redis"].map((db) => (
                   <span
                     key={db}
-                    className="text-xs px-2 py-0.5 rounded border border-border text-muted"
+                    className="text-xs px-2 py-0.5 rounded border border-border text-muted inline-flex items-center gap-1"
                   >
+                    <TechIcon name={db} />
                     {db}
                   </span>
                 ))}
