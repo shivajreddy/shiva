@@ -3,7 +3,7 @@ import { BlogCard } from "@/components/BlogCard";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Blog",
+  title: "~/blog",
   description: "Thoughts on software engineering, technology, and more.",
 };
 

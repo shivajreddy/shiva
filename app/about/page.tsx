@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { TechIcon } from "@/components/TechIcon";
 
 export const metadata: Metadata = {
-  title: "About",
+  title: "~/about",
   description: "About shiva - software engineer, builder, and writer.",
 };
 

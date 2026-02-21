@@ -3,7 +3,7 @@ import { ProjectCard } from "@/components/ProjectCard";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Projects",
+  title: "~/projects",
   description: "Things I've built and contributed to.",
 };
 

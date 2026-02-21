@@ -13,8 +13,8 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "shiva | Software Engineer",
-    template: "%s | shiva",
+    default: "shiva: ~",
+    template: "shiva: %s",
   },
   description:
     "Software engineer, builder, and writer. Personal blog and project portfolio.",
