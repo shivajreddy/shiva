@@ -1,15 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const ASCII_ART = [
-  " ███████╗██╗  ██╗██╗██╗   ██╗ █████╗ ",
-  " ██╔════╝██║  ██║██║██║   ██║██╔══██╗",
-  " ███████╗███████║██║██║   ██║███████║",
-  " ╚════██║██╔══██║██║╚██╗ ██╔╝██╔══██║",
-  " ███████║██║  ██║██║ ╚████╔╝ ██║  ██║",
-  " ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝  ╚═╝  ╚═╝",
-];
+import Image from "next/image";
 
 const INFO_LINES: { label: string; value: string; href?: string }[] = [
   { label: "", value: "shiva@shiva.computer" },
@@ -28,7 +20,7 @@ const COLOR_BLOCKS = "██ ██ ██ ██ ██ ██ ██ ██";
 
 export function Terminal() {
   const [visibleLines, setVisibleLines] = useState(0);
-  const totalLines = Math.max(ASCII_ART.length, INFO_LINES.length) + 2; // +2 for gap + color blocks
+  const totalLines = INFO_LINES.length + 2; // +2 for command + color blocks
 
   useEffect(() => {
     const timers: NodeJS.Timeout[] = [];
@@ -65,19 +57,20 @@ export function Terminal() {
 
         {/* Neofetch output: ASCII art on left, info on right */}
         <div className="flex flex-col sm:flex-row gap-0 sm:gap-6">
-          {/* ASCII art - hidden on very small screens, shown on sm+ */}
-          <div className="hidden sm:block shrink-0" aria-hidden="true">
-            {ASCII_ART.map((line, i) => (
-              <div
-                key={`ascii-${i}`}
-                className={`whitespace-pre text-accent transition-opacity duration-150 ${
-                  visibleLines >= i + 2 ? "opacity-100" : "opacity-0"
-                }`}
-                style={{ fontSize: "0.65rem", lineHeight: "1.3" }}
-              >
-                {line}
-              </div>
-            ))}
+          {/* Image - hidden on very small screens, shown on sm+ */}
+          <div
+            className={`hidden sm:block shrink-0 transition-opacity duration-500 ${
+              visibleLines >= 2 ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <Image
+              src="/images/neofetch.png"
+              alt="ASCII waves"
+              width={160}
+              height={200}
+              className="rounded opacity-80"
+              priority
+            />
           </div>
 
           {/* Info lines */}
