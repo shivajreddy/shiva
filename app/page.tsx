@@ -109,6 +109,30 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Playground CTA */}
+      <section className="mb-16">
+        <Link href="/playground" className="block group">
+          <div className="relative rounded-lg overflow-hidden">
+            {/* Gradient border */}
+            <div className="absolute inset-0 glow-border rounded-lg opacity-40 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative m-[1px] rounded-lg bg-card p-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold glow-text mb-1">
+                  ~/playground
+                </h2>
+                <p className="text-muted text-sm">
+                  An interactive terminal. Explore a virtual filesystem, play
+                  Snake, take a quiz, and find easter eggs.
+                </p>
+              </div>
+              <span className="text-muted group-hover:text-accent transition-colors text-lg shrink-0 ml-4">
+                &rarr;
+              </span>
+            </div>
+          </div>
+        </Link>
+      </section>
+
       {/* Quick Links */}
       <section>
         <h2 className="text-lg font-semibold mb-4">

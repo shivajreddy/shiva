@@ -69,6 +69,31 @@ body {
   animation: blink 1s infinite;
 }
 
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.glow-text {
+  background: linear-gradient(270deg, #00ff41, #00ccff, #a855f7, #00ff41);
+  background-size: 300% 300%;
+  animation: gradient-shift 4s ease infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark .glow-text {
+  filter: brightness(1.2);
+  text-shadow: 0 0 20px rgba(0, 255, 65, 0.3), 0 0 40px rgba(0, 204, 255, 0.2);
+}
+
+.glow-border {
+  background: linear-gradient(270deg, #00ff41, #00ccff, #a855f7, #00ff41);
+  background-size: 300% 300%;
+  animation: gradient-shift 4s ease infinite;
+}
+
 pre {
   overflow-x: auto;
   border-radius: 8px;
