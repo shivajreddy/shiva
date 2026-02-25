@@ -1,9 +1,26 @@
 import { Terminal } from "@/components/Terminal";
 import { BlogCard } from "@/components/BlogCard";
 import { ProjectCard } from "@/components/ProjectCard";
+import { SelfhostedCard } from "@/components/SelfhostedCard";
 import { getAllPosts } from "@/lib/blog";
 import { getFeaturedProjects } from "@/lib/projects";
 import Link from "next/link";
+
+const selfhostedApps = [
+  {
+    name: "Audiobookshelf",
+    description:
+      "Self-hosted audiobook and podcast server. Streams my entire library with progress tracking across devices.",
+    url: "https://abs.shiva.computer",
+    status: "online" as const,
+  },
+  {
+    name: "Jellyfin",
+    description:
+      "Free software media system for streaming movies, shows, and music. No subscriptions, no tracking.",
+    status: "wip" as const,
+  },
+];
 
 export default function Home() {
   const recentPosts = getAllPosts().slice(0, 3);
@@ -66,6 +83,31 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Self-Hosted Apps */}
+      <section className="mb-16">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold">
+            <span className="text-accent mr-2">$</span>
+            docker ps --homelab
+          </h2>
+          <Link
+            href="/selfhosted"
+            className="text-sm text-muted hover:text-accent transition-colors"
+          >
+            view all &rarr;
+          </Link>
+        </div>
+        <p className="text-muted text-sm mb-4">
+          Services running on my own hardware &mdash; no third-party clouds, no
+          subscriptions, full control over my data.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {selfhostedApps.map((app) => (
+            <SelfhostedCard key={app.name} {...app} />
+          ))}
+        </div>
+      </section>
 
       {/* Quick Links */}
       <section>

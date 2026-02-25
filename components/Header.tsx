@@ -9,6 +9,8 @@ const navLinks = [
   { href: "/", label: "~" },
   { href: "/blog", label: "~/blog" },
   { href: "/projects", label: "~/projects" },
+  { href: "/selfhosted", label: "~/selfhosted" },
+  { href: "/playground", label: "~/playground" },
   { href: "/about", label: "~/about" },
 ];
 
