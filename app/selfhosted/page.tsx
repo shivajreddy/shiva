@@ -76,6 +76,14 @@ const automationApps = [
 
 const infraApps = [
   {
+    name: "Nextcloud",
+    description:
+      "Private cloud storage and file sync. Docs, calendars, contacts — all self-hosted.",
+    url: "https://cloud.shiva.computer",
+    local: "http://192.168.5.156:8080",
+    status: "wip" as const,
+  },
+  {
     name: "Pi-hole",
     description:
       "Network-wide DNS ad blocker. Upstream DNS via Cloudflare with DNSSEC enabled.",
@@ -104,14 +112,6 @@ const infraApps = [
       "Unified dashboard for all services. Central portal with live Docker status integration.",
     url: "https://home.shiva.computer",
     local: "http://192.168.5.156:3847",
-    status: "wip" as const,
-  },
-  {
-    name: "Filebrowser",
-    description:
-      "Web-based file manager for browsing and managing media, backups, and configs.",
-    url: "https://files.shiva.computer",
-    local: "http://192.168.4.100:8080",
     status: "wip" as const,
   },
   {
