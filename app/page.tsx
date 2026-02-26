@@ -43,7 +43,7 @@ const selfhostedApps = [
     name: "Home Assistant",
     description:
       "Smart home automation hub with 2000+ integrations.",
-    url: "https://home.shiva.computer",
+    url: "https://ha.shiva.computer",
     local: "http://192.168.4.100:8123",
     status: "wip" as const,
   },

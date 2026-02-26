@@ -61,7 +61,7 @@ const automationApps = [
     name: "Home Assistant",
     description:
       "Smart home automation hub with 2000+ integrations. Controls lights, sensors, and everything in between.",
-    url: "https://home.shiva.computer",
+    url: "https://ha.shiva.computer",
     local: "http://192.168.4.100:8123",
     status: "wip" as const,
   },
@@ -102,8 +102,8 @@ const infraApps = [
     name: "Homepage",
     description:
       "Unified dashboard for all services. Central portal with live Docker status integration.",
-    url: "https://dash.shiva.computer",
-    local: "http://192.168.4.100:3000",
+    url: "https://home.shiva.computer",
+    local: "http://192.168.5.156:3847",
     status: "wip" as const,
   },
   {
