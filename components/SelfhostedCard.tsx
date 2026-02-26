@@ -2,6 +2,7 @@ interface SelfhostedCardProps {
   name: string;
   description: string;
   url?: string;
+  local?: string;
   status: "online" | "wip";
 }
 
@@ -9,6 +10,7 @@ export function SelfhostedCard({
   name,
   description,
   url,
+  local,
   status,
 }: SelfhostedCardProps) {
   return (
@@ -29,7 +31,7 @@ export function SelfhostedCard({
         </span>
       </div>
       <p className="text-sm text-muted mb-3">{description}</p>
-      <div className="flex items-center gap-3 text-xs">
+      <div className="flex items-center gap-3 text-xs flex-wrap">
         {url ? (
           <a
             href={url}
@@ -37,10 +39,22 @@ export function SelfhostedCard({
             rel="noopener noreferrer"
             className="text-muted hover:text-accent transition-colors"
           >
-            [visit]
+            [public]
           </a>
         ) : (
-          <span className="text-muted/50">[coming soon]</span>
+          <span className="text-muted/50">[public: soon]</span>
+        )}
+        {local ? (
+          <a
+            href={local}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted hover:text-accent transition-colors"
+          >
+            [lan]
+          </a>
+        ) : (
+          <span className="text-muted/50">[lan: n/a]</span>
         )}
       </div>
     </div>

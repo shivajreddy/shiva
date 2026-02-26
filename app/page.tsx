@@ -10,14 +10,49 @@ const selfhostedApps = [
   {
     name: "Audiobookshelf",
     description:
-      "Self-hosted audiobook and podcast server. Streams my entire library with progress tracking across devices.",
+      "Audiobook and podcast server with progress tracking across devices.",
     url: "https://abs.shiva.computer",
+    local: "http://192.168.5.156:13378",
     status: "online" as const,
+  },
+  {
+    name: "Plex",
+    description:
+      "Media streaming for movies, TV shows, and music with hardware transcoding.",
+    url: "https://plex.shiva.computer",
+    local: "http://192.168.4.100:32400/web",
+    status: "wip" as const,
   },
   {
     name: "Jellyfin",
     description:
-      "Free software media system for streaming movies, shows, and music. No subscriptions, no tracking.",
+      "Open-source media server. No accounts, no tracking, free transcoding.",
+    url: "https://caseflix.shiva.computer",
+    local: "http://192.168.5.156:8096",
+    status: "online" as const,
+  },
+  {
+    name: "Kavita",
+    description:
+      "Book, comic, and manga server with a built-in web reader.",
+    url: "https://books.shiva.computer",
+    local: "http://192.168.5.156:5000",
+    status: "online" as const,
+  },
+  {
+    name: "Home Assistant",
+    description:
+      "Smart home automation hub with 2000+ integrations.",
+    url: "https://home.shiva.computer",
+    local: "http://192.168.4.100:8123",
+    status: "wip" as const,
+  },
+  {
+    name: "Vaultwarden",
+    description:
+      "Self-hosted Bitwarden-compatible password manager.",
+    url: "https://vault.shiva.computer",
+    local: "http://192.168.4.100:8090",
     status: "wip" as const,
   },
 ];
