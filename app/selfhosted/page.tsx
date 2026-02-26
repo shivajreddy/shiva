@@ -8,22 +8,6 @@ export const metadata: Metadata = {
 
 const mediaApps = [
   {
-    name: "Plex",
-    description:
-      "Media streaming server for movies, TV shows, and music with hardware transcoding.",
-    url: "https://plex.shiva.computer",
-    local: "http://192.168.4.100:32400/web",
-    status: "wip" as const,
-  },
-  {
-    name: "Jellyfin",
-    description:
-      "Open-source media server. No accounts, no tracking, free hardware transcoding via VAAPI.",
-    url: "https://caseflix.shiva.computer",
-    local: "http://192.168.5.156:8096",
-    status: "online" as const,
-  },
-  {
     name: "Audiobookshelf",
     description:
       "Audiobook and podcast server with progress tracking across devices.",
@@ -38,6 +22,22 @@ const mediaApps = [
     url: "https://books.shiva.computer",
     local: "http://192.168.5.156:5000",
     status: "online" as const,
+  },
+  {
+    name: "Jellyfin",
+    description:
+      "Open-source media server. No accounts, no tracking, free hardware transcoding via VAAPI.",
+    url: "https://caseflix.shiva.computer",
+    local: "http://192.168.5.156:8096",
+    status: "online" as const,
+  },
+  {
+    name: "Plex",
+    description:
+      "Media streaming server for movies, TV shows, and music with hardware transcoding.",
+    url: "https://plex.shiva.computer",
+    local: "http://192.168.4.100:32400/web",
+    status: "wip" as const,
   },
   {
     name: "Overseerr",
