@@ -94,7 +94,7 @@ const infraApps = [
     name: "Uptime Kuma",
     description:
       "Service monitoring dashboard. Tracks uptime and health of all selfhosted services.",
-    url: "https://status.shiva.computer",
+    url: "https://status.shiva.computer/status/gruham",
     status: "online" as const,
   },
   {
@@ -151,6 +151,22 @@ export default function SelfhostedPage() {
           Cloudflare, no ports forwarded.
         </p>
       </div>
+
+      {/* Status Page Embed */}
+      <section className="mb-10">
+        <h2 className="text-sm font-semibold text-muted mb-3 uppercase tracking-wider">
+          <span className="text-accent mr-2">#</span>
+          Live Status
+        </h2>
+        <div className="rounded-lg border border-border overflow-hidden">
+          <iframe
+            src="https://status.shiva.computer/status/gruham"
+            className="w-full h-[500px]"
+            title="Service Status"
+            loading="lazy"
+          />
+        </div>
+      </section>
 
       {/* Media & Entertainment */}
       <section className="mb-10">
