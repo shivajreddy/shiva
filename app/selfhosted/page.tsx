@@ -94,9 +94,8 @@ const infraApps = [
     name: "Uptime Kuma",
     description:
       "Service monitoring dashboard. Tracks uptime and health of all selfhosted services.",
-    url: "https://monitor.shiva.computer",
-    local: "http://192.168.4.101:3001",
-    status: "wip" as const,
+    url: "https://status.shiva.computer",
+    status: "online" as const,
   },
   {
     name: "Portainer",
