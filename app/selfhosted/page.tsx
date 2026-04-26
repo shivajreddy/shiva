@@ -152,22 +152,6 @@ export default function SelfhostedPage() {
         </p>
       </div>
 
-      {/* Status Page Embed */}
-      <section className="mb-10">
-        <h2 className="text-sm font-semibold text-muted mb-3 uppercase tracking-wider">
-          <span className="text-accent mr-2">#</span>
-          Live Status
-        </h2>
-        <div className="rounded-lg border border-border overflow-hidden">
-          <iframe
-            src="https://status.shiva.computer/status/gruham"
-            className="w-full h-[500px]"
-            title="Service Status"
-            loading="lazy"
-          />
-        </div>
-      </section>
-
       {/* Media & Entertainment */}
       <section className="mb-10">
         <h2 className="text-sm font-semibold text-muted mb-3 uppercase tracking-wider">
